@@ -1,0 +1,8 @@
+# Bỏ qua thư mục cấu hình của VS Code
+.vscode/
+
+# Bỏ qua các file thực thi (chạy chương trình)
+*.exe
+
+# (Tùy chọn) Bỏ qua file PDF vì đây là file binary, dễ làm nặng repo
+*.pdf
