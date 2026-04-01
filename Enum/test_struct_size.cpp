@@ -1,5 +1,5 @@
-#include <iostream> 
 
+#include <iostream> 
 
 struct B { 	//Quy định bất di bất dịch của trình biên dịch (Compiler) về Memory Alignment cho struct là: Kích thước tổng cộng của cả một struct phải chia hết cho kích thước của thành phần lớn nhất bên trong nó.
     int x;   // 4 bytes
