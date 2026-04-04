@@ -11,28 +11,30 @@
 // =========================================================================
 // PHẦN 1: KHI NÀO TRẢ VỀ STD::STRING KHÔNG BỊ PHẠT HIỆU NĂNG?
 // =========================================================================
-std::string func_return_std_string_safely() {
-    std::string is_std_string_local = "Local Variable";
-    
-    // ✅ <TRÁNH ĐƯỢC LỖI COPY: C++ tự động "di chuyển" (move) bộ nhớ ra ngoài>
-    return is_std_string_local; 
-}
+
+// 💡 [CONCEPT] Hàm này minh họa cơ chế "Move Semantics" (hoặc Copy Elision) khi trả về biến cục bộ.
+std::string func_return_std_string_safely() 
+{ // 📦 [ASSEMBLY] Khởi tạo biến cục bộ trên RAM động.
+    std::string is_std_string_local = "Local Variable"; // 📥 [INPUT/I-O] Cấp phát RAM cho chuỗi.
+    return is_std_string_local; // ⚙️ [PROCESSING] C++ tự động "di chuyển" quyền sở hữu RAM ra ngoài thay vì copy đắt đỏ.
+} // 🚀 [PERFORMANCE] Tình trạng: Tránh được lỗi copy, hiệu năng được bảo toàn tuyệt đối.
+
 
 int main() {
     // =========================================================================
     // PHẦN 2: STRING LITERALS & NAMESPACE (C++14)
     // =========================================================================
     
-    // ❌ <KÉO THEO RÁC: Kéo theo toàn bộ thư viện literals không cần thiết>
+    // ⚠️ [WARNING: Kéo theo toàn bộ thư viện literals không cần thiết, làm ô nhiễm namespace.]
     // using namespace std::literals; 
     
-    // ✅ <CHUẨN: Chỉ khai báo quyền sử dụng đúng hậu tố 's' của string>
+    // ✅ [PASS VÌ: Chỉ khai báo quyền sử dụng đúng nhóm hậu tố 's' của chuỗi.]
     using namespace std::string_literals;
     
-    // ✅ <ĐẠT ĐƯỢC TÍNH TIỆN LỢI: Trình biên dịch tự ép kiểu thành std::string>
+    // ✅ [PASS VÌ: Hậu tố 's' giúp trình biên dịch tự động ép kiểu thành đối tượng std::string.]
     auto is_std_string_literal = "Embedded"s; 
     
-    // ❌ <BỊ HẠN CHẾ: Thiếu chữ 's' nên nó chỉ là mảng char kiểu C (const char[])>
+    // ⚠️ [WARNING: Thiếu chữ 's' nên nó bị giáng cấp thành mảng char kiểu C (const char[]).]
     auto not_std_string_literal = "Embedded"; 
     
     // =========================================================================
@@ -41,11 +43,12 @@ int main() {
     
     std::string is_std_string_demo {"IoT"};
     
-    // ✅ <TRÁNH ĐƯỢC CẢNH BÁO BẢO MẬT: Trả về số có dấu (signed) an toàn hơn>
+    // ✅ [PASS VÌ: std::ssize() trả về số có dấu (signed), tránh được cảnh báo bảo mật và lỗi số học.]
     int safe_length = static_cast<int>(std::ssize(is_std_string_demo));
     
-    // ❌ <LỖI BIÊN DỊCH: std::string đòi RAM động, xung khắc với constexpr ở C++17>
+    // ❌ [FAIL VÌ: std::string đòi RAM động lúc runtime, xung khắc hoàn toàn với yêu cầu tĩnh của constexpr ở C++17.]
     // constexpr std::string not_constexpr_string = "Error"; 
+    // Uncomment dòng trên: constexpr variable 'not_constexpr_string' must be initialized by a constant expression
     
     return 0;
 }
