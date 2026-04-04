@@ -9,15 +9,19 @@ Bài này tập trung vào cách `std::string_view` loại bỏ hoàn toàn chi 
 #include <string>
 #include <string_view>
 
-// ❌ <LỖI HIỆU NĂNG: Pass-by-value ép hệ thống copy toàn bộ vùng nhớ RAM của chuỗi>
-void not_function_for_Std_String_View(std::string text_copy) {
-    std::cout << "Copy: " << text_copy << '\n';
-}
+// 👤 [HARDWARE] Hàm này nhận tham số theo kiểu truyền giá trị (Pass-by-value).
+void not_function_for_Std_String_View(std::string text_copy) 
+{ // 📦 [ASSEMBLY] Trình biên dịch sinh mã ép hệ thống copy toàn bộ vùng nhớ RAM của chuỗi gốc.
+    std::cout << "Copy: " << text_copy << '\n'; // 📥 [INPUT/I-O] Ghi nội dung bản sao ra màn hình.
+} // 🚀 [PERFORMANCE] Tình trạng: Tốn thời gian cấp phát RAM và copy dữ liệu vô ích.
 
-// ✅ <ĐẠT ĐƯỢC TỐI ƯU 100%: Tham số string_view chỉ cấp quyền "nhìn", KHÔNG tốn RAM copy>
-void function_for_Std_String_View(std::string_view text_view) {
-    std::cout << "View: " << text_view << '\n';
-}
+
+// 💡 [CONCEPT] Hàm này tối ưu 100% bằng cách chỉ nhận một "góc nhìn" (View).
+void function_for_Std_String_View(std::string_view text_view) 
+{ // 📦 [ASSEMBLY] Chỉ truyền địa chỉ bộ nhớ và kích thước (rất nhẹ), KHÔNG cấp phát RAM mới.
+    std::cout << "View: " << text_view << '\n'; // 📥 [INPUT/I-O] Đọc trực tiếp từ bộ nhớ của chuỗi gốc.
+} // 🚀 [PERFORMANCE] Tình trạng: Zero-copy, tốc độ thực thi cao nhất.
+
 
 int main() {
     // =========================================================================
@@ -25,31 +29,37 @@ int main() {
     // =========================================================================
     std::string not_Std_String_View_owner { "Heavy Data" };
     
-    // ✅ <ĐẠT ĐƯỢC TÍNH TƯƠNG THÍCH: Khởi tạo view trực tiếp từ một std::string có sẵn>
+    // ✅ [PASS VÌ: Khởi tạo view trực tiếp từ std::string có sẵn. View chỉ lấy địa chỉ gốc để trỏ tới.]
     std::string_view is_Std_String_View_observer { not_Std_String_View_owner }; 
     
-    // ✅ <ĐẠT ĐƯỢC SỰ LINH HOẠT: Tự động chuyển C-style và std::string thành string_view>
+    // ✅ [PASS VÌ: Trình biên dịch tự động chuyển C-style thành string_view ngầm định.]
     function_for_Std_String_View("C-Style String"); 
+    
+    // ✅ [PASS VÌ: Trình biên dịch tự động chuyển std::string thành string_view ngầm định.]
     function_for_Std_String_View(not_Std_String_View_owner); 
     
-    // ❌ <BỊ HẠN CHẾ BẢO MẬT: C++ cấm chuyển ngược ngầm định từ view sang string để tránh copy nhầm>
+    // ❌ [FAIL VÌ: C++ cấm chuyển ngược ngầm định từ view sang string để tránh rủi ro copy vô ý.]
     // not_function_for_Std_String_View(is_Std_String_View_observer); 
+    // Uncomment dòng trên: no viable conversion from 'std::string_view' to 'std::string'
     
-    // ✅ <CHUẨN: Ép kiểu tường minh (explicit) nếu bạn thực sự cần tạo một bản copy>
+    // ✅ [PASS VÌ: Ép kiểu tường minh (explicit). Báo cho Compiler biết lập trình viên chủ động muốn tốn RAM copy.]
     not_function_for_Std_String_View(static_cast<std::string>(is_Std_String_View_observer));
+
 
     // =========================================================================
     // PHẦN 2: THAY ĐỔI GÓC NHÌN VÀ CONSTEXPR
     // =========================================================================
     std::string_view is_Std_String_View_dynamic { not_Std_String_View_owner };
     
-    // ✅ <ĐẠT ĐƯỢC SỰ CƠ ĐỘNG: Gán lại view không làm thay đổi chuỗi gốc "Heavy Data">
+    // ✅ [PASS VÌ: Gán lại view chỉ đổi hướng của "cửa sổ nhìn". Nó không làm thay đổi chuỗi gốc "Heavy Data".]
     is_Std_String_View_dynamic = "Light Data"; 
     
     using namespace std::string_view_literals;
-    auto is_Std_String_View_literal = "Embedded"sv; // Hậu tố 'sv' tạo ngay string_view
     
-    // ✅ <ĐẠT ĐƯỢC HIỆU NĂNG BIÊN DỊCH: Khác với string, string_view sinh ra là để dành cho constexpr>
+    // ✅ [PASS VÌ: Hậu tố 'sv' tự động ép kiểu chữ C-style thành std::string_view lập tức.]
+    auto is_Std_String_View_literal = "Embedded"sv; 
+    
+    // ✅ [PASS VÌ: string_view không dùng RAM động. Nó sinh ra để hoạt động hoàn hảo với từ khóa constexpr.]
     constexpr std::string_view is_Std_String_View_constant { "Compile-time Text" };
 
     return 0;

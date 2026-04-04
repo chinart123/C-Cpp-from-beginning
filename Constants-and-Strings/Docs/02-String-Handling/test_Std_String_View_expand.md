@@ -9,24 +9,29 @@ Bài này làm rõ giới hạn vật lý của `std::string_view` (với tư c�
 #include <string>
 #include <string_view>
 
-// ❌ <LỖI LOGIC: Hàm trả về một string cục bộ, biến này sẽ bị RAM tiêu diệt ngay khi hàm xong>
-std::string not_function_for_Std_String_View_return() {
-    std::string temp_str { "Alex" };
-    return temp_str;
-}
+// 👤 [HARDWARE] Hàm này tạo ra một biến chuỗi cục bộ sống trên RAM động.
+std::string not_function_for_Std_String_View_return() 
+{ // 📦 [ASSEMBLY] Xin cấp phát bộ nhớ và chuẩn bị sao chép/di chuyển dữ liệu ra ngoài.
+    std::string temp_str { "Alex" }; // 📥 [INPUT/I-O] Cấp phát RAM cho chuỗi.
+    return temp_str; // ⚙️ [PROCESSING] Trả về giá trị và lập tức tiêu hủy biến cục bộ.
+} // ⚠️ [WARNING] Tình trạng: Trả về một Đối tượng tạm thời (Temporary object), cực kỳ nguy hiểm nếu lấy View trỏ vào.
+
 
 int main() {
     // =========================================================================
     // PHẦN 1: CẠM BẪY DANGLING VIEW (GÓC NHÌN MÙ/LƠ LỬNG)
     // =========================================================================
     
-    // ❌ <LỖI CHÍ MẠNG: View đang trỏ mắt vào một chuỗi đã bị hàm phía trên tiêu diệt>
+    // ⚠️ [WARNING: LỖI CHÍ MẠNG. View đang trỏ mắt vào một đối tượng tạm thời vừa bị hủy xong ở hàm trên (Dangling view).]
     std::string_view is_Std_String_View_dangling_1 { not_function_for_Std_String_View_return() }; 
-    // std::cout << is_Std_String_View_dangling_1; // Undefined Behavior!
+    // Uncomment dòng dưới: Undefined Behavior! In ra vùng nhớ rác.
+    // std::cout << is_Std_String_View_dangling_1; 
     
     using namespace std::string_literals;
-    // ❌ <LỖI CHÍ MẠNG: Hậu tố 's' tạo ra chuỗi string tạm thời (temporary), chết ngay lập tức>
+    
+    // ⚠️ [WARNING: LỖI CHÍ MẠNG. Hậu tố 's' tạo ra std::string động. Nó sinh ra rồi chết ngay lập tức, bỏ lại View trỏ vào khoảng không.]
     std::string_view is_Std_String_View_dangling_2 { "Temporary"s };
+
 
     // =========================================================================
     // PHẦN 2: CHUỖI GỐC BỊ THAY ĐỔI (INVALIDATION)
@@ -34,20 +39,23 @@ int main() {
     std::string not_Std_String_View_owner { "Origin Data" };
     std::string_view is_Std_String_View_dependent { not_Std_String_View_owner };
     
-    // ❌ <BỊ VÔ HIỆU HÓA: Chủ sở hữu thay đổi cấu trúc, view tự động trở thành phế thải>
+    // ⚠️ [WARNING: BỊ VÔ HIỆU HÓA. Chủ sở hữu (owner) bị gán chữ mới, hệ thống đổi vùng RAM. View lúc này bị mù (Invalidated) vì vẫn trỏ vào RAM cũ.]
     not_Std_String_View_owner = "New Data Modified!"; 
-    // std::cout << is_Std_String_View_dependent; // Undefined Behavior!
+    // Uncomment dòng dưới: Undefined Behavior!
+    // std::cout << is_Std_String_View_dependent; 
+
 
     // =========================================================================
     // PHẦN 3: KÉO RÈM CỬA SỔ (VIEW MODIFICATION / SUBSTRING)
     // =========================================================================
     std::string_view is_Std_String_View_window { "Quadcopter" };
     
-    // ✅ <ĐẠT ĐƯỢC TÍNH CƠ ĐỘNG: Cắt bớt phần hiển thị mà không đụng chạm RAM của chuỗi gốc>
-    is_Std_String_View_window.remove_prefix(4); // Cắt 4 chữ bên trái ("Quad")
+    // ✅ [PASS VÌ: Hàm remove_prefix dịch chuyển điểm bắt đầu của "cửa sổ nhìn" sang phải 4 ký tự mà không chạm tới RAM gốc.]
+    is_Std_String_View_window.remove_prefix(4); 
     std::cout << is_Std_String_View_window << '\n'; // In ra: "copter"
     
-    is_Std_String_View_window.remove_suffix(3); // Cắt tiếp 3 chữ bên phải ("ter")
+    // ✅ [PASS VÌ: Hàm remove_suffix trừ đi 3 ký tự cuối trên chiều dài của "cửa sổ nhìn", không chạm tới RAM gốc.]
+    is_Std_String_View_window.remove_suffix(3); 
     std::cout << is_Std_String_View_window << '\n'; // In ra: "cop"
 
     return 0;
