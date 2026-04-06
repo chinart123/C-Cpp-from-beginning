@@ -162,8 +162,8 @@ store i32 5, ptr %6, align 4
 ### 3. Sự khác biệt về Metadata giữa các phiên bản
 Dù logic mã máy giống hệt nhau, phần siêu dữ liệu (metadata) ở cuối tệp có sự phân hóa rõ rệt để hỗ trợ hệ sinh thái liên kết của C++ hiện đại.
 
-* **Tệp [`noi_tang_cpp14.ll`](src/noi_tang_cpp14.ll) và [`noi_tang_cpp17.ll`](src/noi_tang_cpp17.ll)**: Hoàn toàn không chứa tùy chọn cấu hình linker nào.
-* **Tệp [`noi_tang_cpp20.ll`](src/noi_tang_cpp20.ll)**: Xuất hiện độc quyền cấu hình rỗng dành cho linker ở gần cuối file.
+* **Tệp [`noi_tang_cpp14.ll`](noi_tang_cpp14.ll) và [`noi_tang_cpp17.ll`](noi_tang_cpp17.ll)**: Hoàn toàn không chứa tùy chọn cấu hình linker nào.
+* **Tệp [`noi_tang_cpp20.ll`](noi_tang_cpp20.ll)**: Xuất hiện độc quyền cấu hình rỗng dành cho linker ở gần cuối file.
     ```llvm
     ; Khởi tạo sẵn cấu hình cho Linker (Đặc quyền từ C++20)
     !llvm.linker.options = !{}
@@ -178,9 +178,9 @@ Các tệp `.ll` bên dưới là kết quả sinh ra từ lệnh `clang++ -S -e
 
 | 🔬 Tệp nội tạng | 📌 Chuẩn C++ | 📝 Ghi chú |
 |---|---|---|
-| 📄 [noi_tang_cpp14.ll](src/noi_tang_cpp14.ll) | C++14 | Có Warning UB cho `temp_x = temp_x++` |
-| 📄 [noi_tang_cpp17.ll](src/noi_tang_cpp17.ll) | C++17 | Không có Warning, logic IR giống C++14 |
-| 📄 [noi_tang_cpp20.ll](src/noi_tang_cpp20.ll) | C++20 | Thêm metadata `!llvm.linker.options` cho Modules |
-| 📄 [F.2-more-on-constexpr-and-constant_expression.md](Docs/01-Compile-Time-Concepts/F.2-more-on-constexpr-and-constant_expression.md) | — | Bổ sung kiến thức về `constexpr function` |
-| 📄 [Advanced-Reader-for-Constexpr.md](Docs/Q-and-A-Deep_dives_questions/Advanced-Reader-for-Constexpr.md) | C++23 | Mở rộng kiến thức nâng cao về `constexpr` |
+| 📄 [noi_tang_cpp14.ll](noi_tang_cpp14.ll) | C++14 | Có Warning UB cho `temp_x = temp_x++` |
+| 📄 [noi_tang_cpp17.ll](noi_tang_cpp17.ll) | C++17 | Không có Warning, logic IR giống C++14 |
+| 📄 [noi_tang_cpp20.ll](noi_tang_cpp20.ll) | C++20 | Thêm metadata `!llvm.linker.options` cho Modules |
+| 📄 [F.2-more-on-constexpr-and-constant_expression.md](../Docs/01-Compile-Time-Concepts/F.2-more-on-constexpr-and-constant_expression.md) | — | Bổ sung kiến thức về `constexpr function` |
+| 📄 [Advanced-Reader-for-Constexpr.md](../Docs/Q-and-A-Deep_dives_questions/Advanced-Reader-for-Constexpr.md) | C++23 | Mở rộng kiến thức nâng cao về `constexpr` |
 > 💡 **Tip:** Nếu dùng VS Code, cài extension **LLVM IR** để có syntax highlighting cho các tệp `.ll` trên.
