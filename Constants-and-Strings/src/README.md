@@ -176,11 +176,41 @@ Dù logic mã máy giống hệt nhau, phần siêu dữ liệu (metadata) ở c
 
 Các tệp `.ll` bên dưới là kết quả sinh ra từ lệnh `clang++ -S -emit-llvm` ở **Phần 3B**. Nhấn vào tên file để mở trực tiếp.
 
+| 🔬 Source code | 📌 Chuẩn C++ | 📝 Ghi chú |
+|---|---|---|
+| 📄 [operand_dangling_check.cpp](operand_dangling_check.cpp) | — |Source code cho các file `.ll`|
+
 | 🔬 Tệp nội tạng | 📌 Chuẩn C++ | 📝 Ghi chú |
 |---|---|---|
 | 📄 [noi_tang_cpp14.ll](noi_tang_cpp14.ll) | C++14 | Có Warning UB cho `temp_x = temp_x++` |
 | 📄 [noi_tang_cpp17.ll](noi_tang_cpp17.ll) | C++17 | Không có Warning, logic IR giống C++14 |
 | 📄 [noi_tang_cpp20.ll](noi_tang_cpp20.ll) | C++20 | Thêm metadata `!llvm.linker.options` cho Modules |
-| 📄 [F.2-more-on-constexpr-and-constant_expression.md](../Docs/01-Compile-Time-Concepts/F.2-more-on-constexpr-and-constant_expression.md) | — | Bổ sung kiến thức về `constexpr function` |
-| 📄 [Advanced-Reader-for-Constexpr.md](../Docs/Q-and-A-Deep_dives_questions/Advanced-Reader-for-Constexpr.md) | C++23 | Mở rộng kiến thức nâng cao về `constexpr` |
-> 💡 **Tip:** Nếu dùng VS Code, cài extension **LLVM IR** để có syntax highlighting cho các tệp `.ll` trên.
+> 💡 **Tip:** Nếu dùng VS Code, cài extension **LLVM IR** để có syntax highlighting cho các tệp `.ll` trên. 
+
+## 📁 Các file khác trong chương 5 và một số file mở rộng kiến thức
+
+| 🔬 Tệp / Tài liệu | 📌 Chuẩn C++ | 📝 Ghi chú (Bản chất kỹ thuật) |
+|---|:---:|---|
+| 📄 [F.2-more-on-constexpr-and-constant_expression.md](../Docs/01-Compile-Time-Concepts/F.2-more-on-constexpr-and-constant_expression.md) | **C++11/14** | Bổ sung kiến thức về `constexpr function` (ra mắt C++11) và sự nới lỏng quy tắc tính toán phức tạp (từ C++14). |
+| 📄 [missing_Std_White_Space.cpp](../src/missing_Std_White_Space.cpp) | **C++11** | Xử lý hiện tượng trôi lệnh nhập liệu: Cách dùng `std::ws` để dọn dẹp ký tự khoảng trắng thừa trong luồng bộ đệm trước khi gọi `std::getline()`. |
+| 📄 [5.7_assignment_Std_String.cpp](5.7_assignment_Std_String.cpp) | **C++98** | Giải bài tập thực hành thao tác cơ bản với chuỗi cấp phát động `std::string`. |
+| 📄 [5.8-Std-String_View.md](../Docs/01-Compile-Time-Concepts/5.8-Std-String_View.md) | **C++17** | Bản chất của "kính quan sát" `std::string_view` (không copy, không cấp phát bộ nhớ) và cạm bẫy truy cập vùng nhớ chết (Dangling View). |
+| 📄 [Prefer-Constant-Variables-to-Preprocessor_Macros.md](../Docs/Q-and-A-Deep_dives_questions/Prefer-Constant-Variables-to-Preprocessor_Macros.md) | **Phổ quát** | Điểm yếu chí mạng của `#define` (không Type-checking, rò rỉ Scope) và lý do kiến trúc C++ hiện đại ưu tiên `const`/`constexpr`. |
+| 📄 [Q-A-Constant_Expression-and-Constexpr.md](../Docs/Q-and-A-Deep_dives_questions/Q-A-Constant_Expression-and-Constexpr.md) | **C++11** | Mổ xẻ ranh giới hệ thống: Phân biệt Khái niệm cốt lõi (Constant Expression) và Từ khóa ngôn ngữ (`constexpr`). |
+| 📄 [Symbolic_Constant.md](../Docs/Q-and-A-Deep_dives_questions/Symbolic_Constant.md) | **Phổ quát** | Tối ưu hóa độ đọc hiểu mã nguồn (Readability): Kỹ thuật triệt tiêu "Magic Number" bằng cách sử dụng Name Constant. |
+| 📄 [Advanced-Reader-for-Constexpr.md](../Docs/Q-and-A-Deep_dives_questions/Advanced-Reader-for-Constexpr.md) | **C++20/23** | Những giới hạn cuối cùng của Compile-time được gỡ bỏ (Hỗ trợ cấp phát động `new`/`delete` và Virtual function ngay trong lúc biên dịch). |
+
+---
+
+## 📁 Các kiến thức nâng cao (Modern C++ Build System Architecture)
+
+*Ghi chú: Các tệp dưới đây minh họa cho quy trình biên dịch cô lập phụ thuộc nghiêm ngặt (Strict Dependency Isolation) của kiến trúc C++ Modules.*
+
+| 🔬 Tệp / Tài liệu | 📌 Chuẩn C++ | 📝 Ghi chú (Bản chất kỹ thuật) |
+|---|:---:|---|
+| 📄 [Modern-C++-Build-System-Architecture.md](Modern-C++-Build-System-Architecture.md) | **C++23** | Hệ thống hóa Nomenclature (Thuật ngữ cốt lõi): Toolchain Interoperability, BMI, Two-Phase Compilation, và AST Serialization. |
+| 📄 `std.pcm` & `std.o` | **C++23** | File BMI trung gian (AST) và File Object mã máy sinh ra từ thao tác Precompile toàn bộ thư viện chuẩn `libc++` của LLVM. |
+| 📄 [my_module.cppm](my_module.cppm) | **C++23** | File mã nguồn Interface chứa định nghĩa cấu trúc Module tự định nghĩa (Sử dụng chỉ thị `export module`). |
+| 📄 `my_module.pcm` | **C++23** | File BMI (Built Module Interface). Chứa cấu trúc Cây cú pháp trừu tượng (AST) đã được đóng băng (Serialized) để load cực nhanh. |
+| 📄 `my_module.oo` | **C++23** | File mã máy (Object file) chứa các đoạn mã thực thi của module, chuẩn bị cho công đoạn Link (Nối) cuối cùng. |
+| 📄 [self-test.cpp](self-test.cpp) | **C++23** | Chương trình chính áp dụng `import std;` và `import my_module;`, minh họa sự chấm dứt của hiện tượng Include Bắc Cầu (Transitive Includes). |
