@@ -208,9 +208,9 @@ Các tệp `.ll` bên dưới là kết quả sinh ra từ lệnh `clang++ -S -e
 
 | 🔬 Tệp / Tài liệu | 📌 Chuẩn C++ | 📝 Ghi chú (Bản chất kỹ thuật) |
 |---|:---:|---|
-| 📄 [Modern-C++-Build-System-Architecture.md](./src/Modern-C++-Build-System-Architecture.md) | **C++23** | Hệ thống hóa Nomenclature (Thuật ngữ cốt lõi): Toolchain Interoperability, BMI, Two-Phase Compilation, và AST Serialization. |
+| 📄 [Modern-C++-Build-System-Architecture.md](../Docs/Q-and-A-Deep_dives_questions/Modern-C++-Build-System-Architecture.md) | **C++23** | Hệ thống hóa Nomenclature (Thuật ngữ cốt lõi): Toolchain Interoperability, BMI, Two-Phase Compilation, và AST Serialization. |
 | 📄 `std.pcm` & `std.o` | **C++23** | File BMI trung gian (AST) và File Object mã máy sinh ra từ thao tác Precompile toàn bộ thư viện chuẩn `libc++` của LLVM. |
-| 📄 [my_module.cppm](./src/my_module.cppm) | **C++23** | File mã nguồn Interface chứa định nghĩa cấu trúc Module tự định nghĩa (Sử dụng chỉ thị `export module`). |
-| 📄 [my_module.pcm](./src/my_module.pcm) | **C++23** | File BMI (Built Module Interface). Chứa cấu trúc Cây cú pháp trừu tượng (AST) đã được đóng băng (Serialized) để load cực nhanh. |
-| 📄 [my_module.o](./src/my_module.o) | **C++23** | File mã máy (Object file) chứa các đoạn mã thực thi của module, chuẩn bị cho công đoạn Link (Nối) cuối cùng. |
-| 📄 [self-test.cpp](./src/self-test.cpp) | **C++23** | Chương trình chính áp dụng `import std;` và `import my_module;`, minh họa sự chấm dứt của hiện tượng Include Bắc Cầu (Transitive Includes). |
+| 📄 [my_module.cppm](my_module.cppm) | **C++23** | File mã nguồn Interface chứa định nghĩa cấu trúc Module tự định nghĩa (Sử dụng chỉ thị `export module`). |
+| 📄 [my_module.pcm](my_module.pcm) | **C++23** | File BMI (Built Module Interface). Chứa cấu trúc Cây cú pháp trừu tượng (AST) đã được đóng băng (Serialized) để load cực nhanh. |
+| 📄 [my_module.o](my_module.o) | **C++23** | File mã máy (Object file) chứa các đoạn mã thực thi của module, chuẩn bị cho công đoạn Link (Nối) cuối cùng. |
+| 📄 [self-test.cpp](self-test.cpp) | **C++23** | Chương trình chính áp dụng `import std;` và `import my_module;`, minh họa sự chấm dứt của hiện tượng Include Bắc Cầu (Transitive Includes). |

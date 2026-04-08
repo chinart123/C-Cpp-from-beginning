@@ -1,8 +1,11 @@
-export module my_module; // Khai báo đây là một module tên là my_module
+// --- my_module.cppm (Bản gốc) ---
 
-import std; // Module này âm thầm import std để dùng std::string bên trong nó
+#define HACK_NAME "Toi la trum" // ĐÂY LÀ MỘT MACRO RÁC CỦA PREPROCESSOR
 
-// Chỉ public (export) cái hàm này ra ngoài
+export module my_module;
+import std; 
+
 export void doSomething() {
-    std::string hidden_str = "Toi dung string am tham nhe";
+    // Lập trình viên cố tình dùng Macro nội bộ trong thư viện của họ
+    std::string hidden_str = "Toi dung string am tham " + std::string(HACK_NAME);
 }
