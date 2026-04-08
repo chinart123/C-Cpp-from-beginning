@@ -1,11 +1,14 @@
-import my_module; // Chỉ import my_module, KHÔNG import std
-import std;
+import my_module; 
+import std; 
+
 int main() {
-    doSomething(); // Chạy bình thường vì đã được export
+    using namespace std::string_literals;
+    doSomething(); // Gọi hàm bình thường
     
-    
-    std::string name = "Chien"; // LỖI NGAY LẬP TỨC Ở DÒNG NÀY!
-    
-    std::cout << "Goi thu ten: " << name << "\n";
+    // NẾU LÀ THẾ GIỚI CŨ (#include "my_module.h"):
+    // std::cout << HACK_NAME; -> Dòng này sẽ chạy được, in ra "Toi la trum". Vì rác đã tràn sang main.cpp.
+
+    // NHƯNG TRONG THẾ GIỚI MODULES (import my_module;):
+    std::cout << HACK_NAME; // -> LỖI BIÊN DỊCH NGAY LẬP TỨC! Trình biên dịch không biết HACK_NAME là cái gì.
     return 0;
 }
