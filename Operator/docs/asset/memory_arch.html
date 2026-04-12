@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiến Trúc Bộ Nhớ: STM32 vs ESP32 vs Raspberry Pi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #e2e8f0; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 1050px; width: 100%; }
+        h1 { color: #38bdf8; text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #94a3b8; margin-top: 0; margin-bottom: 30px; }
+
+        /* Nút chọn Kiến trúc */
+        .arch-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .tab-btn { background: #334155; color: white; border: none; padding: 10px 20px; font-size: 1.1em; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; }
+        .tab-btn:hover { background: #475569; }
+        .tab-btn.active { background: #38bdf8; color: #0f172a; box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+
+        /* Bố cục chính */
+        .layout { display: flex; gap: 30px; }
+        .hardware-panel { flex: 2; background: #0f172a; padding: 20px; border-radius: 10px; border: 1px solid #334155; min-height: 350px; position: relative; }
+        .action-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; }
+
+        /* Khối bộ nhớ */
+        .memory-block { background: #1e293b; border: 2px dashed #475569; padding: 15px; border-radius: 8px; margin-bottom: 15px; transition: 0.4s; position: relative; }
+        .memory-block h3 { margin: 0 0 10px 0; color: #94a3b8; font-size: 1.1em; }
+        .memory-zone { background: #334155; padding: 10px; border-radius: 5px; margin-top: 10px; font-family: monospace; font-size: 0.9em; transition: 0.3s; border-left: 4px solid transparent; }
+        
+        /* Hiệu ứng Highlight */
+        .highlight-code { border-left-color: #a855f7; background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
+        .highlight-global { border-left-color: #3b82f6; background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+        .highlight-local { border-left-color: #10b981; background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+        .highlight-heap { border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+
+        /* Nút hành động (Bắn code) */
+        .code-btn { background: #1e293b; color: #cbd5e1; border: 1px solid #475569; padding: 12px; text-align: left; font-family: monospace; font-size: 1em; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .code-btn:hover { background: #334155; border-color: #94a3b8; }
+        .code-btn span { font-weight: bold; }
+        .c-code { color: #a855f7; } .c-global { color: #3b82f6; } .c-local { color: #10b981; } .c-heap { color: #f59e0b; }
+
+        /* Khung giải thích */
+        .explanation-box { margin-top: 30px; background: #0f172a; border-left: 5px solid #38bdf8; padding: 20px; border-radius: 0 8px 8px 0; }
+        .explanation-box h4 { margin: 0 0 10px 0; color: #38bdf8; font-size: 1.2em; }
+        .explanation-box p { margin: 0 0 10px 0; color: #cbd5e1; line-height: 1.6; }
+        .explanation-box code { background: #1e293b; padding: 2px 6px; border-radius: 4px; color: #fbbf24; }
+        .phenomenon { margin-top: 10px; padding-top: 10px; border-top: 1px solid #334155; color: #f87171; font-weight: bold; font-size: 0.9em; line-height: 1.5; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Bản đồ Bộ nhớ C/C++ (Memory Architecture)</h1>
+    <p class="subtitle">Ánh xạ Code xuống Phần cứng vật lý</p>
+
+    <div class="arch-selector">
+        <button class="tab-btn active" onclick="loadArch('stm32')">1. STM32 (Bare-metal)</button>
+        <button class="tab-btn" onclick="loadArch('esp32')">2. ESP32 (RTOS)</button>
+        <button class="tab-btn" onclick="loadArch('rpi')">3. Raspberry Pi (OS)</button>
+    </div>
+
+    <div class="layout">
+        <div class="hardware-panel" id="hardwarePanel">
+            </div>
+
+        <div class="action-panel">
+            <h3 style="margin-top: 0; color: #94a3b8;">Thực thi Code:</h3>
+            <button class="code-btn" onclick="triggerCode('code')"><span class="c-code">void func() {...}</span><br><small>Biên dịch Hàm/Lệnh</small></button>
+            <button class="code-btn" onclick="triggerCode('global')"><span class="c-global">struct Context my_var;</span><br><small>Biến Toàn cục / Static</small></button>
+            <button class="code-btn" onclick="triggerCode('local')"><span class="c-local">int x = 5;</span><br><small>Biến Cục bộ (Stack)</small></button>
+            <button class="code-btn" onclick="triggerCode('heap')"><span class="c-heap">malloc() / new</span><br><small>Cấp phát động (Heap)</small></button>
+        </div>
+    </div>
+
+    <div class="explanation-box" id="expBox">
+        <h4>Vui lòng chọn một lệnh C++ ở bên phải</h4>
+        <p>Để xem nó được lưu ở đâu trên kiến trúc đang chọn.</p>
+        <div class="phenomenon" id="phenomenonBox" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    // Dữ liệu mô tả 3 kiến trúc (ĐÃ CẬP NHẬT CHI TIẾT FILE STARTUP & MISRA C CHO STM32)
+    const architectures = {
+        stm32: {
+            html: `
+                <div class="memory-block">
+                    <h3>INTERNAL FLASH (ROM)</h3>
+                    <div class="memory-zone" id="z-code">.text (Code/Mã máy) & ROData</div>
+                </div>
+                <div class="memory-block">
+                    <h3>INTERNAL SRAM</h3>
+                    <div class="memory-zone" id="z-global">.data / .bss (Cấp phát tĩnh - Static Allocation)</div>
+                    <div class="memory-zone" id="z-heap" style="opacity: 0.5; border: 1px dashed #ef4444;">Heap (Thường bị vô hiệu hóa)</div>
+                    <div class="memory-zone" id="z-local">Stack (Mở rộng xuống dưới ↓)</div>
+                </div>
+            `,
+            explanations: {
+                code: { 
+                    title: "Chạy trực tiếp từ Flash (XIP - eXecute In Place)", 
+                    desc: "Trên STM32, CPU đọc lệnh trực tiếp từ Internal Flash. Điều này khiến nó chạy cực kỳ ổn định, không có độ trễ do Cache.",
+                    phenom: "Hiện tượng: Nếu bạn lỡ tay dùng con trỏ ghi đè lên địa chỉ Flash, CPU sẽ dính lỗi HardFault ngay lập tức." 
+                },
+                global: { 
+                    title: "SRAM - .data & .bss (Cấp phát tĩnh)", 
+                    desc: "Biến toàn cục (như <code>drn_btn_PA0</code>) được quy hoạch RAM cố định ngay từ lúc Compile. Cách làm này gọi là <strong>Statically Allocated Memory</strong>. Nó tuân thủ chuẩn an toàn hàng không/ô tô (MISRA C), giúp biết chính xác RAM bị chiếm bao nhiêu trước cả khi cắm điện.",
+                    phenom: "Đặc điểm: Cực kỳ an toàn, chống phân mảnh bộ nhớ tuyệt đối. Dùng quá RAM sẽ báo lỗi ngay lúc build code." 
+                },
+                local: { 
+                    title: "SRAM - Hệ thống Stack", 
+                    desc: "Khu vực RAM sinh ra để chứa biến cục bộ tạm thời. Gọi hàm thì đưa vào Stack, thoát hàm thì Stack tự dọn dẹp (LIFO).",
+                    phenom: "Hiện tượng kinh điển: Đệ quy vô hạn hoặc khai báo mảng cục bộ quá to sẽ gây <strong>Stack Overflow</strong> (Stack đụng trần RAM) -> Treo cứng MCU (HardFault)." 
+                },
+                heap: { 
+                    title: "SRAM - Sự thật về Heap (Tội đồ Bare-metal)", 
+                    desc: "Mặc định trong file <code>startup_stm32.s</code>, <code>Heap_Size</code> thường được set bằng <code>0x00000000</code>. Nghĩa là không có Heap. Dùng malloc() sẽ tịt ngòi.",
+                    phenom: "Tại sao bị hắt hủi? <br>1. <strong>Memory Leak:</strong> Quên free() là bay sạch RAM.<br>2. <strong>Phân mảnh:</strong> Xin/trả liên tục làm RAM bị lủng lỗ rỗ.<br>3. <strong>Độ trễ:</strong> Thời gian malloc() tìm RAM trống là không xác định, phá vỡ tính thời gian thực (Real-time)." 
+                }
+            }
+        },
+        esp32: {
+            html: `
+                <div class="memory-block" style="border-color: #a855f7;">
+                    <h3>EXTERNAL SPI FLASH (Nằm ngoài chip)</h3>
+                    <div class="memory-zone" id="z-code-ext">Lưu trữ Mã máy gốc</div>
+                </div>
+                <div class="memory-block">
+                    <h3>INTERNAL IRAM (Instruction RAM)</h3>
+                    <div class="memory-zone" id="z-code">Lệnh đang chạy (Load qua Cache)</div>
+                </div>
+                <div class="memory-block">
+                    <h3>INTERNAL DRAM (Data RAM)</h3>
+                    <div class="memory-zone" id="z-global">.data / .bss (Biến toàn cục)</div>
+                    <div class="memory-zone" id="z-heap">Heap chung</div>
+                    <div class="memory-zone" id="z-local" style="border: 1px solid #10b981;">Task 1 Stack (FreeRTOS)</div>
+                    <div class="memory-zone" style="opacity: 0.5; border: 1px solid #10b981;">Task 2 Stack (FreeRTOS)</div>
+                </div>
+            `,
+            explanations: {
+                code: { 
+                    title: "Cache từ Flash ngoài vào IRAM", 
+                    desc: "ESP32 có Flash nằm BÊN NGOÀI. Đọc qua dây nối tiếp rất chậm. CPU phải 'hút' code từ Flash chép vào IRAM rồi mới chạy.",
+                    phenom: "Hiện tượng: <strong>Cache Miss</strong>. Nếu hàm quá lớn không nạp vừa IRAM, ESP32 sẽ bị khựng lại vài micro-giây để đi tìm code ngoài Flash." 
+                },
+                global: { 
+                    title: "DRAM (Data RAM)", 
+                    desc: "Tương tự STM32, biến toàn cục nằm ở Data RAM cố định.",
+                    phenom: "" 
+                },
+                local: { 
+                    title: "Task Stack (Phép màu của RTOS)", 
+                    desc: "Khác với STM32 chỉ có 1 Stack chung, FreeRTOS trên ESP32 băm nhỏ RAM ra, cấp cho mỗi Task (luồng) một cái Stack riêng biệt.",
+                    phenom: "Lỗi đặc trưng: <strong>Task Stack Overflow</strong>. Nếu khai báo biến bự trong 1 Task, RTOS sẽ chủ động ném ra lỗi Panic, reset chip và in log báo chính xác Task nào bị tràn." 
+                },
+                heap: { 
+                    title: "Heap đa nhân & Vấn nạn phân mảnh", 
+                    desc: "ESP32 có RAM lớn hơn (hơn 300KB) nên thường dùng Heap cho WiFi/Bluetooth. Vì có 2 nhân CPU nên lệnh malloc() được RTOS bảo vệ bằng Mutex.",
+                    phenom: "Hiện tượng: <strong>Heap Fragmentation</strong> (Phân mảnh). Bạn có 100KB RAM trống, nhưng nó bị băm nát thành nhiều khúc nhỏ. Khi xin 1 mảng 50KB liền mạch, ESP32 sẽ báo lỗi 'Out of Memory'." 
+                }
+            }
+        },
+        rpi: {
+            html: `
+                <div class="memory-block" style="border-color: #64748b;">
+                    <h3>LƯU TRỮ VẬT LÝ (Disk / SD Card)</h3>
+                    <div class="memory-zone">OS + App Binaries</div>
+                </div>
+                <div class="memory-block" style="border-color: #3b82f6;">
+                    <h3>MMU & VIRTUAL MEMORY (Bộ nhớ Ảo)</h3>
+                    <div class="memory-zone" id="z-code">Text Segment (Mã máy)</div>
+                    <div class="memory-zone" id="z-global">Data Segment</div>
+                    <div class="memory-zone" id="z-heap">Heap (Tự động nới rộng nhờ OS)</div>
+                    <div class="memory-zone" id="z-local">Stack (8MB mặc định)</div>
+                </div>
+                <div class="memory-block" style="border-color: #f59e0b;">
+                    <h3>CPU CACHE (L1/L2/L3)</h3>
+                    <div class="memory-zone" id="z-cache">Dữ liệu & Lệnh siêu tốc ngay trong CPU</div>
+                </div>
+            `,
+            explanations: {
+                code: { 
+                    title: "Bộ nhớ ảo (Virtual Memory)", 
+                    desc: "Mỗi chương trình C++ trên Pi đều ảo tưởng nó sở hữu nguyên cái RAM từ địa chỉ 0x0. MMU (Memory Management Unit) sẽ dịch địa chỉ ảo này sang con chip RAM thật.",
+                    phenom: "Hiện tượng <strong>Page Fault / Swapping</strong>: Nếu OS hết RAM thật, nó sẽ lén quăng bớt dữ liệu ra thẻ nhớ SD. Lúc này phần mềm của bạn sẽ cực kỳ giật lag." 
+                },
+                global: { 
+                    title: "Data Segment Ảo", 
+                    desc: "Hệ điều hành cô lập không gian của từng phần mềm. Phần mềm A không thể vô tình sửa biến toàn cục của phần mềm B.",
+                    phenom: "Hiện tượng: Bất cứ nỗ lực nào dùng con trỏ chọc vào địa chỉ nhớ của app khác (hoặc của OS) sẽ bị văng lỗi <strong>'Segmentation Fault (Core dumped)'</strong> và bị OS giết ngay lập tức." 
+                },
+                local: { 
+                    title: "Stack khổng lồ & CPU Cache", 
+                    desc: "Stack trên Linux thường cấp sẵn tận 8MB (so với 1-2KB của vi điều khiển). Khi biến được tính toán, nó sẽ được kéo thẳng lên CPU CACHE để chạy siêu nhanh.",
+                    phenom: "Hiện tượng <strong>Cache Miss mảng 2 chiều</strong>: Chạy mảng 2 chiều sai thứ tự cột/hàng sẽ khiến Cache L1/L2 bị trượt liên tục, làm chương trình chậm đi 10 lần so với code tối ưu Cache." 
+                },
+                heap: { 
+                    title: "Heap khổng lồ (OS cấp phát)", 
+                    desc: "Khi gọi new/malloc, OS sẽ tìm RAM vật lý rảnh rỗi và 'map' vào không gian ảo của chương trình bạn.",
+                    phenom: "Hiện tượng: <strong>OOM (Out Of Memory) Killer</strong>. Nếu phần mềm của bạn bị Memory Leak và xin quá nhiều RAM, Linux sẽ cử 'Sát thủ OOM' ra bắn chết chương trình C++ của bạn để cứu hệ điều hành khỏi bị treo." 
+                }
+            }
+        }
+    };
+
+    let currentArch = 'stm32';
+
+    function loadArch(arch) {
+        currentArch = arch;
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById('hardwarePanel').innerHTML = architectures[arch].html;
+        document.getElementById('expBox').innerHTML = `
+            <h4>Vui lòng chọn một lệnh C++ ở bên phải</h4>
+            <p>Để xem sự khác biệt trên phần cứng: ${arch.toUpperCase()}</p>
+        `;
+    }
+
+    function triggerCode(type) {
+        document.querySelectorAll('.memory-zone').forEach(z => {
+            z.classList.remove('highlight-code', 'highlight-global', 'highlight-local', 'highlight-heap');
+        });
+
+        let zoneId = 'z-' + type;
+        let colorClass = 'highlight-' + type;
+        
+        let targetZone = document.getElementById(zoneId);
+        if(targetZone) targetZone.classList.add(colorClass);
+
+        if (currentArch === 'esp32' && type === 'code') {
+            document.getElementById('z-code-ext').classList.add(colorClass);
+        }
+
+        if (currentArch === 'rpi' && (type === 'local' || type === 'code')) {
+            document.getElementById('z-cache').classList.add('highlight-heap');
+        }
+
+        let expData = architectures[currentArch].explanations[type];
+        document.getElementById('expBox').innerHTML = `
+            <h4>${expData.title}</h4>
+            <p>${expData.desc}</p>
+            ${expData.phenom ? `<div class="phenomenon">${expData.phenom}</div>` : ''}
+        `;
+    }
+
+    window.onload = () => loadArch('stm32');
+</script>
+
+</body>
+</html>

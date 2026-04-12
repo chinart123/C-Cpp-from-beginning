@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Hệ Điều Hành: Bare-metal vs RTOS vs GPOS</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #e2e8f0; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 1100px; width: 100%; }
+        h1 { color: #38bdf8; text-align: center; margin: 0 0 5px 0; }
+        .subtitle { text-align: center; color: #94a3b8; margin-bottom: 25px; }
+
+        /* Controls */
+        .controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; align-items: center; }
+        .arch-btn { background: #334155; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .arch-btn.active { background: #38bdf8; color: #0f172a; }
+        .power-btn { background: #10b981; color: white; border: none; padding: 10px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 1.1em; text-transform: uppercase; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+        .power-btn.off { background: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+        .action-btn { background: #f59e0b; color: #0f172a; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; display: none; }
+
+        /* Layout Main */
+        .layout { display: flex; gap: 20px; }
+        
+        /* CPU Panel */
+        .cpu-panel { flex: 1; background: #0f172a; border: 2px solid #475569; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .cpu-panel h2 { color: #f87171; margin-top: 0; }
+        .registers { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .reg { background: #1e293b; padding: 10px; border-left: 4px solid #f87171; border-radius: 4px; font-family: monospace; display: flex; justify-content: space-between; transition: all 0.3s; }
+        .reg-value { color: #38bdf8; font-weight: bold; }
+        .cpu-status { margin-top: 20px; padding: 10px; background: #334155; width: 100%; text-align: center; border-radius: 6px; font-weight: bold; color: #10b981; transition: 0.3s; }
+
+        /* Memory / Tasks Panel */
+        .mem-panel { flex: 2; background: #0f172a; border: 2px solid #475569; border-radius: 10px; padding: 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-start; align-content: flex-start;}
+        .task-box { background: #1e293b; border: 2px solid #334155; border-radius: 8px; padding: 15px; flex: 1; min-width: 200px; transition: 0.3s; opacity: 0.5; filter: grayscale(80%); }
+        .task-box h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #cbd5e1; }
+        .task-box.active { border-color: #38bdf8; opacity: 1; filter: grayscale(0%); transform: scale(1.02); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.2); }
+        .task-box.interrupted { border-color: #f59e0b; opacity: 1; filter: grayscale(0%); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+        .stack-area { background: #0f172a; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 0.85em; min-height: 80px; color: #64748b; }
+        .stack-data { color: #f87171; margin-top: 5px; display: block; animation: fadeIn 0.3s; }
+
+        /* Explanation Panel */
+        .info-panel { flex: 1; background: #1e293b; border-left: 4px solid #38bdf8; padding: 20px; border-radius: 0 10px 10px 0; font-size: 0.95em; line-height: 1.5; color: #cbd5e1;}
+        .info-panel h3 { margin-top: 0; color: #38bdf8; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Highlight hiệu ứng lưu/đẩy thanh ghi */
+        .reg-highlight { background: rgba(248, 113, 113, 0.2); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Mô phỏng "Chuyển Ngữ Cảnh" (Context Switch)</h1>
+    <p class="subtitle">Lõi CPU hoạt động như thế nào dưới các Hệ điều hành khác nhau?</p>
+
+    <div class="controls">
+        <button class="arch-btn active" onclick="setArch('stm32')">1. STM32 (Bare-metal)</button>
+        <button class="arch-btn" onclick="setArch('esp32')">2. ESP32 (FreeRTOS)</button>
+        <button class="arch-btn" onclick="setArch('rpi')">3. RPi/PC (Linux GPOS)</button>
+        
+        <button class="power-btn" id="powerBtn" onclick="togglePower()">BẬT NGUỒN</button>
+        <button class="action-btn" id="interruptBtn" onclick="triggerSTM32Interrupt()">KÍCH HOẠT NGẮT!</button>
+    </div>
+
+    <div class="layout">
+        <div class="cpu-panel">
+            <h2>CPU CORE</h2>
+            <div class="registers">
+                <div class="reg" id="reg-pc"><span>PC (Program Counter):</span> <span class="reg-value">0x00000000</span></div>
+                <div class="reg" id="reg-sp"><span>SP (Stack Pointer):</span> <span class="reg-value">0x00000000</span></div>
+                <div class="reg" id="reg-r0"><span>R0 (Data Register):</span> <span class="reg-value">0x00000000</span></div>
+            </div>
+            <div class="cpu-status" id="cpu-status">ĐANG TẮT MÁY</div>
+        </div>
+
+        <div class="mem-panel" id="mem-panel">
+            </div>
+
+        <div class="info-panel" id="info-panel">
+            </div>
+    </div>
+</div>
+
+<script>
+    // --- STATE VARIABLES ---
+    let currentArch = 'stm32';
+    let isPoweredOn = false;
+    let systemClock = null;
+    let tickCount = 0;
+    
+    // Biến cho các chế độ
+    let activeTaskIndex = 0; // ESP32 & RPi
+    let isInterrupting = false; // STM32
+
+    // --- DOM ELEMENTS ---
+    const powerBtn = document.getElementById('powerBtn');
+    const interruptBtn = document.getElementById('interruptBtn');
+    const cpuStatus = document.getElementById('cpu-status');
+    const regPC = document.querySelector('#reg-pc .reg-value');
+    const regSP = document.querySelector('#reg-sp .reg-value');
+    const regR0 = document.querySelector('#reg-r0 .reg-value');
+    const memPanel = document.getElementById('mem-panel');
+    const infoPanel = document.getElementById('info-panel');
+
+    // --- CẤU HÌNH KIẾN TRÚC ---
+    const architectures = {
+        stm32: {
+            tasks: [
+                { id: 'main', name: 'Hàm main() (Vòng lặp vô tận)', pc: '0x0800_1000', sp: '0x2000_5000', data: 'Đang đọc Cảm biến...' },
+                { id: 'isr', name: 'Hàm Ngắt (EXTI_IRQHandler)', pc: '0x0800_2500', sp: '0x2000_4FA0', data: 'Đang xử lý Nút nhấn!' }
+            ],
+            info: `<h3>Bare-metal (Không OS)</h3>
+                   <p>- CPU chỉ chạy 1 luồng duy nhất là <code>main()</code>.</p>
+                   <p>- Dùng <b>1 Stack duy nhất</b> được cấp phát trong file startup.s.</p>
+                   <p>- <b>Context Switch duy nhất:</b> Khi có Ngắt (Interrupt) phần cứng. CPU tạm cất thanh ghi vào Stack, chạy ISR, rồi bốc thanh ghi ra chạy tiếp.</p>`
+        },
+        esp32: {
+            tasks: [
+                { id: 'task1', name: 'Task 1: Tính PID (Ưu tiên CAO)', pc: '0x4008_A100', sp: '0x3FFB_1000', data: 'Calc_PID_Motor()...' },
+                { id: 'task2', name: 'Task 2: Blink LED (Ưu tiên THẤP)', pc: '0x4008_B200', sp: '0x3FFB_2000', data: 'Led_Toggle()...' }
+            ],
+            info: `<h3>FreeRTOS (Thời gian thực)</h3>
+                   <p>- Mỗi Task được cấp một <b>Stack riêng biệt</b>.</p>
+                   <p>- Khi chuyển Task, RTOS cất thanh ghi vào Stack A, và nạp thanh ghi từ Stack B lên CPU.</p>
+                   <p>- <b>Lưu ý:</b> Task PID ưu tiên cao sẽ chiếm CPU. Task LED chỉ được chạy khi Task PID tự nguyện báo "ngủ" (vTaskDelay).</p>`
+        },
+        rpi: {
+            tasks: [
+                { id: 'app1', name: 'Process 1: Chrome (Tab YouTube)', pc: '0x0000_7FF1', sp: '0x7FFF_F001', data: 'Đang render Video...' },
+                { id: 'app2', name: 'Process 2: Game Engine', pc: '0x0000_7FF2', sp: '0x7FFF_F002', data: 'Đang tính toán Vật lý...' },
+                { id: 'app3', name: 'Process 3: Background Zalo', pc: '0x0000_7FF3', sp: '0x7FFF_F003', data: 'Đang chờ tin nhắn...' }
+            ],
+            info: `<h3>Linux GPOS (Bộ định tuyến công bằng)</h3>
+                   <p>- Chia sẻ thời gian (Time-Slicing). OS ép CPU phải nhảy liên tục qua lại giữa các app để tạo cảm giác "chạy song song".</p>
+                   <p>- <b>Rủi ro nhúng:</b> Nếu dùng Linux chạy PID cho Quadcopter, nó có thể bị HĐH cắt ngang vài mili-giây để nhường CPU cho Chrome tải web, khiến máy bay rớt.</p>`
+        }
+    };
+
+    // --- ĐỔI CHẾ ĐỘ ---
+    function setArch(arch) {
+        currentArch = arch;
+        if(isPoweredOn) togglePower(); // Tắt máy khi đổi chế độ
+
+        document.querySelectorAll('.arch-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        interruptBtn.style.display = (arch === 'stm32') ? 'inline-block' : 'none';
+        infoPanel.innerHTML = architectures[arch].info;
+
+        renderTasks();
+    }
+
+    function renderTasks() {
+        memPanel.innerHTML = '';
+        architectures[currentArch].tasks.forEach((task, index) => {
+            memPanel.innerHTML += `
+                <div class="task-box" id="box-${task.id}">
+                    <h3 style="color:${index===0?'#10b981':'#cbd5e1'}">${task.name}</h3>
+                    <div class="stack-area">
+                        <span>[Khu vực Stack bộ nhớ]</span>
+                        <div id="stack-content-${task.id}"></div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // --- BẬT / TẮT NGUỒN ---
+    function togglePower() {
+        isPoweredOn = !isPoweredOn;
+        if (isPoweredOn) {
+            powerBtn.innerText = "TẮT NGUỒN";
+            powerBtn.classList.add('off');
+            tickCount = 0;
+            activeTaskIndex = 0;
+            isInterrupting = false;
+            
+            // Xóa rác Stack
+            architectures[currentArch].tasks.forEach(t => {
+                document.getElementById(`stack-content-${t.id}`).innerHTML = '';
+            });
+
+            startOS();
+        } else {
+            powerBtn.innerText = "BẬT NGUỒN";
+            powerBtn.classList.remove('off');
+            clearInterval(systemClock);
+            
+            cpuStatus.innerText = "ĐANG TẮT MÁY";
+            cpuStatus.style.color = "#64748b";
+            cpuStatus.style.backgroundColor = "#334155";
+            
+            regPC.innerText = "0x00000000";
+            regSP.innerText = "0x00000000";
+            regR0.innerText = "0x00000000";
+            
+            document.querySelectorAll('.task-box').forEach(b => b.classList.remove('active', 'interrupted'));
+        }
+    }
+
+    // --- HỆ ĐIỀU HÀNH LÕI (CORE OS LOOP) ---
+    function startOS() {
+        updateCPUState(); // Load state ngay lập tức
+
+        systemClock = setInterval(() => {
+            tickCount++;
+
+            if (currentArch === 'esp32') {
+                // FreeRTOS: Giả lập Task 1 (PID) thỉnh thoảng ngủ nhường cho Task 2
+                if (tickCount % 5 === 0) {
+                    performContextSwitch(1); // Chuyển sang LED
+                } else if (tickCount % 5 === 2) {
+                    performContextSwitch(0); // Chuyển về PID
+                }
+            } 
+            else if (currentArch === 'rpi') {
+                // Linux GPOS: Chuyển vòng tròn liên tục (Round Robin) mỗi 2 nhịp
+                if (tickCount % 2 === 0) {
+                    let next = (activeTaskIndex + 1) % 3;
+                    performContextSwitch(next);
+                }
+            }
+            // STM32 không làm gì trong loop này, chờ bấm nút Ngắt.
+
+        }, 1500); // Tốc độ chạy (1.5 giây / tick)
+    }
+
+    function updateCPUState() {
+        const archData = architectures[currentArch];
+        const task = archData.tasks[activeTaskIndex];
+
+        // Cập nhật giao diện thanh ghi CPU
+        regPC.innerText = task.pc;
+        regSP.innerText = task.sp;
+        regR0.innerText = task.data;
+
+        // Cập nhật giao diện hộp Task
+        document.querySelectorAll('.task-box').forEach(b => b.classList.remove('active', 'interrupted'));
+        
+        let activeBox = document.getElementById(`box-${task.id}`);
+        if(isInterrupting && currentArch === 'stm32') {
+            activeBox.classList.add('interrupted');
+            cpuStatus.innerText = "⚡ ĐANG XỬ LÝ NGẮT (ISR)";
+            cpuStatus.style.color = "#0f172a";
+            cpuStatus.style.backgroundColor = "#f59e0b";
+        } else {
+            activeBox.classList.add('active');
+            cpuStatus.innerText = "▶ ĐANG THỰC THI";
+            cpuStatus.style.color = "#0f172a";
+            cpuStatus.style.backgroundColor = "#10b981";
+        }
+    }
+
+    // --- MÔ PHỎNG CONTEXT SWITCH TỪ TỪ (CÓ ANIMATION CẤT THANH GHI) ---
+    function performContextSwitch(nextIndex) {
+        if(activeTaskIndex === nextIndex) return;
+
+        clearInterval(systemClock); // Tạm dừng đồng hồ hệ thống để làm animation
+        cpuStatus.innerText = "⏳ ĐANG CONTEXT SWITCH...";
+        cpuStatus.style.backgroundColor = "#f87171";
+        cpuStatus.style.color = "#white";
+
+        const currentTask = architectures[currentArch].tasks[activeTaskIndex];
+        const nextTask = architectures[currentArch].tasks[nextIndex];
+
+        // BƯỚC 1: LƯU THANH GHI VÀO STACK CŨ
+        document.getElementById(`stack-content-${currentTask.id}`).innerHTML = `
+            <span class="stack-data">⬇ Đã lưu PC: ${currentTask.pc}</span>
+            <span class="stack-data">⬇ Đã lưu R0: ${currentTask.data}</span>
+        `;
+        document.getElementById(`box-${currentTask.id}`).classList.remove('active');
+
+        // Đợi 0.8s để người dùng nhìn thấy
+        setTimeout(() => {
+            // BƯỚC 2: PHỤC HỒI THANH GHI TỪ STACK MỚI LÊN CPU
+            document.getElementById(`stack-content-${nextTask.id}`).innerHTML = `
+                <span style="color:#10b981">⬆ Phục hồi lên CPU...</span>
+            `;
+            
+            activeTaskIndex = nextIndex;
+            updateCPUState();
+
+            // Xóa thông báo phục hồi sau 0.5s
+            setTimeout(() => {
+                document.getElementById(`stack-content-${nextTask.id}`).innerHTML = '';
+                startOS(); // Resume đồng hồ
+            }, 500);
+
+        }, 1000);
+    }
+
+    // --- XỬ LÝ NGẮT CHO STM32 ---
+    function triggerSTM32Interrupt() {
+        if (!isPoweredOn || isInterrupting) return;
+        
+        isInterrupting = true;
+        clearInterval(systemClock); // Dừng CPU ngay lập tức
+
+        const mainTask = architectures.stm32.tasks[0];
+        const isrTask = architectures.stm32.tasks[1];
+
+        cpuStatus.innerText = "⚡ KÍCH HOẠT NGẮT PHẦN CỨNG!";
+        cpuStatus.style.backgroundColor = "#f59e0b";
+
+        // Lưu Stack của main()
+        document.getElementById(`stack-content-${mainTask.id}`).innerHTML = `
+            <span class="stack-data">⬇ Lưu PC: ${mainTask.pc}</span>
+        `;
+        document.getElementById(`box-${mainTask.id}`).classList.remove('active');
+
+        // Chuyển qua ISR
+        setTimeout(() => {
+            activeTaskIndex = 1; // Nhảy sang ISR Task
+            updateCPUState();
+
+            // Tự động thoát Ngắt sau 2.5 giây
+            setTimeout(() => {
+                isInterrupting = false;
+                activeTaskIndex = 0; // Về lại main()
+                document.getElementById(`stack-content-${mainTask.id}`).innerHTML = '<span style="color:#10b981">⬆ Phục hồi về main()</span>';
+                updateCPUState();
+
+                setTimeout(() => {
+                    document.getElementById(`stack-content-${mainTask.id}`).innerHTML = '';
+                    startOS();
+                }, 800);
+            }, 2500);
+
+        }, 800);
+    }
+
+    // Init
+    setArch('stm32');
+</script>
+
+</body>
+</html>
