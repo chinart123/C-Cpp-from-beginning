@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chương trình kiểm tra số chẵn lẻ</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background-color: #eef2f5; 
+            color: #333; 
+            display: flex; 
+            justify-content: center; 
+            padding: 40px 20px; 
+        }
+        .container { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 12px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05); 
+            max-width: 950px; 
+            width: 100%; 
+            text-align: center; 
+        }
+        h2 { color: #2c3e50; font-size: 2em; margin-bottom: 5px; }
+        .subtitle { color: #64748b; margin-top: 0; margin-bottom: 30px; }
+        
+        .input-group { margin: 25px 0; display: flex; align-items: center; justify-content: center; gap: 15px;}
+        input[type="number"] { 
+            padding: 12px; 
+            font-size: 1.5em; 
+            width: 150px; 
+            text-align: center; 
+            border: 2px solid #cbd5e1; 
+            border-radius: 8px; 
+            outline: none;
+            transition: border-color 0.3s;
+            font-family: monospace;
+        }
+        input[type="number"]:focus { border-color: #3498db; }
+        
+        .math-display { 
+            font-size: 1.8em; 
+            font-family: 'Courier New', Courier, monospace; 
+            background: #f8fafc; 
+            padding: 15px 30px; 
+            border-radius: 8px; 
+            display: inline-block; 
+            border: 1px solid #e2e8f0;
+            color: #475569;
+        }
+        
+        .cards { display: flex; gap: 20px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        
+        .card { 
+            flex: 1; 
+            min-width: 320px; 
+            padding: 25px; 
+            border-radius: 10px; 
+            border: 2px solid #e2e8f0; 
+            background: #ffffff; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .card.active-card {
+            transform: scale(1.03);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            filter: grayscale(0%);
+            opacity: 1;
+            z-index: 10;
+        }
+        .card.dimmed {
+            transform: scale(0.95);
+            filter: grayscale(80%);
+            opacity: 0.4;
+            border-color: #cbd5e1;
+        }
+        
+        .card.correct-theme { border-top: 5px solid #10b981; }
+        .card.trap-theme { border-top: 5px solid #ef4444; }
+
+        /* GIAO DIỆN HỘP THUẬT TOÁN (ALGORITHM BOX) */
+        .algo-box {
+            background-color: #1e293b;
+            color: #94a3b8;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1em;
+            margin: 15px 0;
+            line-height: 1.6;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .algo-step { transition: all 0.3s; padding-left: 10px; border-left: 3px solid transparent; margin: 2px 0;}
+        
+        /* Hiệu ứng sáng dòng code đang chạy */
+        .step-active-green { color: #34d399; font-weight: bold; border-left-color: #34d399; background: rgba(52, 211, 153, 0.1); }
+        .step-active-red { color: #f87171; font-weight: bold; border-left-color: #f87171; background: rgba(248, 113, 113, 0.1); }
+        .step-active-gray { color: #f1f5f9; font-weight: bold; border-left-color: #94a3b8; background: rgba(255, 255, 255, 0.05);}
+
+        .result-badge { 
+            display: inline-block; 
+            padding: 8px 20px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            margin: 15px 0; 
+            color: white; 
+            font-size: 0.9em;
+        }
+        .bg-green { background-color: #10b981; }
+        .bg-red { background-color: #ef4444; }
+        .bg-gray { background-color: #64748b; }
+        
+        .explanation { font-size: 0.95em; color: #475569; line-height: 1.5; height: 60px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Chương trình kiểm tra số chẵn lẻ</h2>
+        <p class="subtitle">Mô phỏng luồng thực thi thuật toán C++</p>
+        
+        <div class="input-group">
+            <label for="numInput" style="font-size: 1.2em; font-weight: bold; font-family: monospace;">int isInteger =</label>
+            <input type="number" id="numInput" value="5">
+        </div>
+
+        <div class="math-display">
+            Kết quả phép chia: <span id="mathExpr">5 % 2</span> = <strong id="mathResult" style="color: #3b82f6;">1</strong>
+        </div>
+
+        <div class="cards">
+            <div class="card correct-theme" id="cardCorrect">
+                <h3 style="color: #10b981; margin-top: 0;">LOGIC CHUẨN MỰC</h3>
+                
+                <div class="algo-box">
+                    <div class="algo-step" id="c-step1">if ((isInteger % 2) == 0) {</div>
+                    <div class="algo-step" id="c-step2">&nbsp;&nbsp;return "CHẴN";</div>
+                    <div class="algo-step" id="c-step3">} else {</div>
+                    <div class="algo-step" id="c-step4">&nbsp;&nbsp;return "LẺ";</div>
+                    <div class="algo-step" id="c-step5">}</div>
+                </div>
+
+                <div id="correctBadge" class="result-badge bg-gray">ĐANG CHỜ...</div>
+                <p class="explanation" id="correctExp"></p>
+            </div>
+
+            <div class="card trap-theme" id="cardTrap">
+                <h3 style="color: #ef4444; margin-top: 0;">CẠM BẪY SỐ LẺ</h3>
+                
+                <div class="algo-box">
+                    <div class="algo-step" id="t-step1">if ((isInteger % 2) == 1) {</div>
+                    <div class="algo-step" id="t-step2">&nbsp;&nbsp;return "LẺ";</div>
+                    <div class="algo-step" id="t-step3">} else {</div>
+                    <div class="algo-step" id="t-step4">&nbsp;&nbsp;return "CHẴN";</div>
+                    <div class="algo-step" id="t-step5">}</div>
+                </div>
+
+                <div id="trapBadge" class="result-badge bg-red">ĐANG CHỜ...</div>
+                <p class="explanation" id="trapExp"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('numInput');
+        const mathExpr = document.getElementById('mathExpr');
+        const mathResult = document.getElementById('mathResult');
+        
+        const cardCorrect = document.getElementById('cardCorrect');
+        const cardTrap = document.getElementById('cardTrap');
+
+        function resetAlgoSteps() {
+            const steps = document.querySelectorAll('.algo-step');
+            steps.forEach(step => {
+                step.className = 'algo-step'; 
+            });
+        }
+
+        function updateUI() {
+            let n = parseInt(input.value);
+            if (isNaN(n)) n = 0;
+
+            let remainder = n % 2;
+
+            mathExpr.innerText = `${n} % 2`;
+            mathResult.innerText = remainder;
+
+            resetAlgoSteps();
+
+            if (remainder === 0) {
+                // SỐ CHẴN
+                cardCorrect.className = "card correct-theme active-card"; 
+                cardTrap.className = "card trap-theme dimmed"; 
+
+                // Highlight luồng chuẩn
+                document.getElementById('c-step1').classList.add('step-active-green');
+                document.getElementById('c-step2').classList.add('step-active-green');
+                document.getElementById('correctBadge').innerText = "CHÍNH XÁC: SỐ CHẴN";
+                document.getElementById('correctBadge').className = "result-badge bg-green";
+                document.getElementById('correctExp').innerText = `Biểu thức (0 == 0) là True. Nhận diện số chẵn hoàn hảo.`;
+
+                // Highlight luồng cạm bẫy (Lọt xuống else)
+                document.getElementById('t-step1').classList.add('step-active-gray');
+                document.getElementById('t-step3').classList.add('step-active-gray');
+                document.getElementById('t-step4').classList.add('step-active-gray');
+                document.getElementById('trapBadge').innerText = "VÔ TÌNH ĐÚNG";
+                document.getElementById('trapBadge').className = "result-badge bg-gray";
+                document.getElementById('trapExp').innerText = "Biểu thức (0 == 1) sai, lọt xuống else. Vô tình vẫn đúng với số chẵn.";
+
+            } else if (remainder === 1) {
+                // SỐ LẺ DƯƠNG
+                cardTrap.className = "card trap-theme active-card"; 
+                cardCorrect.className = "card correct-theme dimmed"; 
+
+                // Highlight luồng chuẩn (Lọt xuống else)
+                document.getElementById('c-step1').classList.add('step-active-gray');
+                document.getElementById('c-step3').classList.add('step-active-gray');
+                document.getElementById('c-step4').classList.add('step-active-gray');
+                document.getElementById('correctBadge').innerText = "VÀO ELSE: SỐ LẺ";
+                document.getElementById('correctBadge').className = "result-badge bg-gray";
+                document.getElementById('correctExp').innerText = "Logic không vào if, lọt xuống else và kết luận số lẻ (Đúng).";
+
+                // Highlight luồng cạm bẫy (Đang dụ dỗ)
+                document.getElementById('t-step1').classList.add('step-active-green');
+                document.getElementById('t-step2').classList.add('step-active-green');
+                document.getElementById('trapBadge').innerText = "TƯỞNG LÀ NGON...";
+                document.getElementById('trapBadge').className = "result-badge bg-green";
+                // Lời kêu gọi hành động ở đây!
+                document.getElementById('trapExp').innerHTML = "Logic nhận diện đúng số lẻ dương. Cạm bẫy chưa sập! <br><strong>👉 Hãy thử nhập thêm dấu trừ (-) xem!</strong>";
+
+            } else if (remainder === -1) {
+                // SỐ LẺ ÂM (SẬP BẪY)
+                cardTrap.className = "card trap-theme active-card"; 
+                cardCorrect.className = "card correct-theme dimmed"; 
+
+                // Highlight luồng chuẩn (Lọt xuống else)
+                document.getElementById('c-step1').classList.add('step-active-gray');
+                document.getElementById('c-step3').classList.add('step-active-gray');
+                document.getElementById('c-step4').classList.add('step-active-gray');
+                document.getElementById('correctBadge').innerText = "VÀO ELSE: VẪN ĐÚNG";
+                document.getElementById('correctBadge').className = "result-badge bg-gray";
+                document.getElementById('correctExp').innerText = "Dù là số âm, nó vẫn lọt xuống else và báo LẺ chính xác!";
+
+                // Highlight luồng cạm bẫy (Báo lỗi đỏ)
+                document.getElementById('t-step1').classList.add('step-active-red'); 
+                document.getElementById('t-step3').classList.add('step-active-red'); 
+                document.getElementById('t-step4').classList.add('step-active-red'); 
+                document.getElementById('trapBadge').innerText = "SẬP BẪY: LỖI LOGIC NẶNG!";
+                document.getElementById('trapBadge').className = "result-badge bg-red";
+                document.getElementById('trapExp').innerHTML = "Biểu thức <strong>(-1 == 1)</strong> bị SAI! Logic chạy xuống else và báo số lẻ âm này là... <strong>SỐ CHẴN!</strong>";
+                document.getElementById('trapExp').style.color = "#ef4444";
+            }
+        }
+
+        input.addEventListener('input', updateUI);
+        updateUI();
+    </script>
+</body>
+</html>
