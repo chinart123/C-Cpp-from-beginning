@@ -6,3 +6,6 @@
 
 # (Tùy chọn) Bỏ qua file PDF vì đây là file binary, dễ làm nặng repo
 *.pdf
+
+.gitnexus
+.claude
