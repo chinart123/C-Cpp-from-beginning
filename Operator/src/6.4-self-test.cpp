@@ -1,0 +1,33 @@
+#include <iostream>
+
+int main() {
+    int x = 10;
+    int y = 20;
+
+    // 1. Biểu thức KHÔNG có side effect
+    x + y; // Hợp lệ trong C++, máy tính cộng 10 + 20 = 30 rồi... vứt đi. 
+           // Không có state nào bị thay đổi cả. (x vẫn là 10, y vẫn là 20)
+
+    // 2. Biểu thức CÓ side effect: Toán tử gán (=)
+    x = 15; // Side effect: Giá trị trong vùng nhớ của biến x bị thay đổi thành 15.
+
+    // 3. Biểu thức CÓ side effect: Toán tử (++)
+    y++; // Side effect: Giá trị trong vùng nhớ của y thay đổi thành 21.
+
+    // 4. Biểu thức CÓ side effect: std::cout
+    // Side effect: Màn hình console của bạn bị thay đổi (hiển thị thêm dòng chữ mới).
+    std::cout << "Gia tri cua x la: " << x << '\n';
+
+    // ---------------------------------------------------------
+    // VÍ DỤ VỀ SỰ NGUY HIỂM CỦA SIDE EFFECT (Lý do tác giả đề cập trong bài)
+    // ---------------------------------------------------------
+    
+    int z = 5;
+    // Câu lệnh dưới đây gọi là Undefined Behavior (Lỗi hành vi không xác định).
+    // Vì biến 'z' bị áp dụng side effect (thay đổi giá trị qua ++z) 
+    // và đồng thời được sử dụng lại trong cùng 1 câu lệnh.
+    // Trình biên dịch có thể tính ra 10, 11 hoặc 12 tùy vào cấu trúc trình biên dịch.
+    int result = z + ++z; 
+
+    return 0;
+}

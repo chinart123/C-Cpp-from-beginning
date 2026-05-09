@@ -1,0 +1,81 @@
+Microsoft Windows [Version 10.0.19045.6466]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>cd C:\Users\Chien\Downloads\CSME20Tools20r46\CSME%20System%20Tools%20v11%20r46\MEInfo\WIN64
+
+C:\Users\Chien\Downloads\CSME20Tools20r46\CSME%20System%20Tools%20v11%20r46\MEInfo\WIN64>MEInfoWin64.exe
+
+Intel(R) MEInfo Version: 11.8.92.4189
+Copyright(C) 2005 - 2020, Intel Corporation. All rights reserved.
+
+
+
+Intel(R) ME code versions:
+
+BIOS Version                                 5.12
+MEBx Version                                 11.0.0.0010
+GbE Version                                  Unknown
+Vendor ID                                    8086
+PCH Version                                  0
+FW Version                                   11.6.10.1196 H
+Security Version (SVN)                       1
+LMS Version                                  Not Available
+MEI Driver Version                           2406.5.5.0
+Wireless Hardware Version                    Not Available
+Wireless Driver Version                      Not Available
+
+FW Capabilities                              0x31010140
+
+        Intel(R) Capability Licensing Service - PRESENT/ENABLED
+        Intel(R) Platform Trust Technology - PRESENT/DISABLED
+
+Re-key needed                                False
+Platform is re-key capable                   True
+TLS                                          Disabled
+Last ME reset reason                         Power up
+Local FWUpdate                               Enabled
+BIOS Config Lock                             Enabled
+GbE Config Lock                              Enabled
+Host Read Access to ME                       Enabled
+Host Write Access to ME                      Enabled
+Host Read Access to EC                       Enabled
+Host Write Access to EC                      Enabled
+SPI Flash ID 1                               EF4018
+SPI Flash ID 2                               Unknown
+BIOS boot State                              Post Boot
+OEM ID                                       00000000-0000-0000-0000-000000000000
+Capability Licensing Service                 Enabled
+OEM Tag                                      0x00000000
+Slot 1 Board Manufacturer                    0x00000000
+Slot 2 System Assembler                      0x00000000
+Slot 3 Reserved                              0x00000000
+M3 Autotest                                  Disabled
+C-link Status                                Disabled
+Independent Firmware Recovery                Disabled
+EPID Group ID                                0x1061
+LSPCON Ports                                 None
+5K Ports                                     None
+OEM Public Key Hash FPF                      Not set
+OEM Public Key Hash ME                       0000000000000000000000000000000000000000000000000000000000000000
+ACM SVN FPF                                  0x0
+KM SVN FPF                                   0x0
+BSMM SVN FPF                                 0x0
+GuC Encryption Key FPF                       Not set
+GuC Encryption Key ME                        0000000000000000000000000000000000000000000000000000000000000000
+
+                                             FPF                      ME
+                                             ---                      --
+Force Boot Guard ACM                         Not set                  Disabled
+Protect BIOS Environment                     Not set                  Disabled
+CPU Debugging                                Not set                  Enabled
+BSP Initialization                           Not set                  Enabled
+Measured Boot                                Not set                  Disabled
+Verified Boot                                Not set                  Disabled
+Key Manifest ID                              Not set                  0x0
+Enforcement Policy                           Not set                  0x0
+PTT                                          Not set                  Enabled
+EK Revoke State                              Not Revoked
+PTT RTC Clear Detection FPF                  Not set
+
+
+C:\Users\Chien\Downloads\CSME20Tools20r46\CSME%20System%20Tools%20v11%20r46\MEInfo\WIN64>
