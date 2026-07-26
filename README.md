@@ -1,3 +1,15 @@
+## 🔗 Quick Links
+
+| Jump to sections |
+| :--- |
+| 🛡️ [1. Toolchain Selection Guide](#1-toolchain-selection-guide) |
+| 🖥️ [2.1. Windows OS Toolchain Setup](#21-windows-os-via-msys2) |
+| 🐧 [2.2. Linux OS Toolchain Setup](#22-linux-os-ubuntu--debian) |
+| 🛂 [3. Environment Variables Configuration](#3-environment-variables-configuration) |
+| 🧪 [4. Environment Verification](#4-environment-verification) |
+
+---
+
 <div align="center">
   <a href="https://clang.llvm.org/">
     <img src="./assets/clang_header.png" alt="LLVM Clang" width="31%">
@@ -163,15 +175,3 @@ Open the Terminal in the directory containing `check_env.cpp` and run the corres
     ./check_env.exe # On Windows
     ```
 If the Output (STDOUT) returns the exact compiler name and version (e.g., GNU GCC (g++) 13.2.0), your environment is ready for development.
-
----
-
-## 🔗 Quick Links
-
-| Jump to sections |
-| :--- |
-| 🛡️ [1. Toolchain Selection Guide](#1-toolchain-selection-guide) |
-| 🪟 [2.1. Windows OS Toolchain Setup](#21-windows-os-via-msys2) |
-| 🐧 [2.2. Linux OS Toolchain Setup](#22-linux-os-ubuntu--debian) |
-| 🛂 [3. Environment Variables Configuration](#3-environment-variables-configuration) |
-| 🧪 [4. Environment Verification](#4-environment-verification) |
